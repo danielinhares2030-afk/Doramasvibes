@@ -5,7 +5,7 @@ import { CustomLoader } from './UIComponents';
 const PlayerView = lazy(() => import('./PlayerView'));
 
 export default function DoramaDetailsView({ dorama, onClose, isSaved, onToggleSave, onToast }) {
-  const [playingVideo, setPlayingVideo] = useState(null);
+  const [playingEpisode, setPlayingEpisode] = useState(null); // Alterado de playingVideo para playingEpisode
 
   if (!dorama) return null;
 
@@ -13,7 +13,7 @@ export default function DoramaDetailsView({ dorama, onClose, isSaved, onToggleSa
 
   const handleAssistirTop = () => {
     if (episodios.length > 0) {
-      setPlayingVideo(episodios[0].videoUrl || episodios[0].link);
+      setPlayingEpisode(episodios[0]); // Passando o objeto inteiro do episódio
     } else {
       if(onToast) onToast("Nenhum episódio disponível ainda.");
     }
@@ -22,8 +22,12 @@ export default function DoramaDetailsView({ dorama, onClose, isSaved, onToggleSa
   return (
     <div className="fixed inset-0 z-50 bg-slate-950 overflow-y-auto animate-fade-in-up">
       <Suspense fallback={<CustomLoader />}>
-        {playingVideo && (
-          <PlayerView playingVideo={playingVideo} setPlayingVideo={setPlayingVideo} />
+        {playingEpisode && (
+          <PlayerView 
+            episode={playingEpisode} 
+            doramaTitle={dorama.title} 
+            onClose={() => setPlayingEpisode(null)} 
+          />
         )}
       </Suspense>
 
@@ -79,7 +83,7 @@ export default function DoramaDetailsView({ dorama, onClose, isSaved, onToggleSa
               <div className="text-slate-500 text-sm py-4 italic">Nenhum episódio cadastrado para este dorama no momento.</div>
             ) : (
               episodios.map((ep, idx) => (
-                <div key={idx} onClick={() => setPlayingVideo(ep.videoUrl || ep.link)} className="flex gap-4 p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:bg-slate-800/80 transition-colors cursor-pointer group">
+                <div key={idx} onClick={() => setPlayingEpisode(ep)} className="flex gap-4 p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:bg-slate-800/80 transition-colors cursor-pointer group">
                   <div className="relative w-32 aspect-video rounded-lg overflow-hidden shrink-0 border border-slate-700">
                     <img src={dorama.coverImage || dorama.image || "https://images.unsplash.com/photo-1616098319696-6b22c4f74d0e?w=500"} className="w-full h-full object-cover opacity-70 group-hover:opacity-50 transition-opacity" alt="" />
                     <div className="absolute inset-0 flex items-center justify-center">

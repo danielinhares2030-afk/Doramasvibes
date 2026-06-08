@@ -5,7 +5,7 @@ import { CustomLoader } from './UIComponents';
 const PlayerView = lazy(() => import('./PlayerView'));
 
 export default function DoramaDetailsView({ dorama, onClose, isSaved, onToggleSave, onToast }) {
-  const [playingEpisode, setPlayingEpisode] = useState(null); // Alterado de playingVideo para playingEpisode
+  const [playingEpisode, setPlayingEpisode] = useState(null);
 
   if (!dorama) return null;
 
@@ -13,7 +13,7 @@ export default function DoramaDetailsView({ dorama, onClose, isSaved, onToggleSa
 
   const handleAssistirTop = () => {
     if (episodios.length > 0) {
-      setPlayingEpisode(episodios[0]); // Passando o objeto inteiro do episódio
+      setPlayingEpisode(episodios[0]);
     } else {
       if(onToast) onToast("Nenhum episódio disponível ainda.");
     }
@@ -25,7 +25,9 @@ export default function DoramaDetailsView({ dorama, onClose, isSaved, onToggleSa
         {playingEpisode && (
           <PlayerView 
             episode={playingEpisode} 
+            episodios={episodios} // Passando a lista para o player conseguir pular episódios
             doramaTitle={dorama.title} 
+            setPlayingEpisode={setPlayingEpisode}
             onClose={() => setPlayingEpisode(null)} 
           />
         )}

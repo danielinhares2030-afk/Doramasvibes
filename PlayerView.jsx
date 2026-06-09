@@ -11,27 +11,48 @@ export default function PlayerView({ episode, episodios, doramaTitle, setPlaying
   const handleNext = () => { if (hasNext) setPlayingEpisode(episodios[currentIndex + 1]); };
   const handlePrev = () => { if (hasPrev) setPlayingEpisode(episodios[currentIndex - 1]); };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen().catch(err => console.error(err));
+  // Lógica do botão voltar (Se tá no Ep 3, volta pro 2. Se tá no 1, fecha e vai pro Dorama)
+  const handleBack = () => {
+    if (hasPrev) {
+      handlePrev();
     } else {
-      document.exitFullscreen();
+      onClose();
+    }
+  };
+
+  // Lógica da Tela Cheia universal para celulares
+  const toggleFullscreen = () => {
+    const elem = containerRef.current;
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => console.error(err));
+      } else if (elem.webkitRequestFullscreen) { // Safari/iOS
+        elem.webkitRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
     }
   };
 
   const toggleOrientation = async () => {
     try {
-      if (!document.fullscreenElement) {
-        await containerRef.current?.requestFullscreen();
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        await toggleFullscreen();
       }
-      const type = window.screen.orientation.type;
-      if (type.includes("portrait")) {
-        await window.screen.orientation.lock("landscape");
-      } else {
-        await window.screen.orientation.lock("portrait");
+      if (window.screen && window.screen.orientation) {
+        const type = window.screen.orientation.type;
+        if (type.includes("portrait")) {
+          await window.screen.orientation.lock("landscape");
+        } else {
+          await window.screen.orientation.lock("portrait");
+        }
       }
     } catch (error) {
-      alert("A rotação automática requer suporte do navegador ou estar em tela cheia.");
+      alert("Para girar, tente ativar a tela cheia ou deite o celular fisicamente.");
     }
   };
 
@@ -78,12 +99,13 @@ export default function PlayerView({ episode, episodios, doramaTitle, setPlaying
     isDirectVideo = finalVideoUrl.toLowerCase().match(/\.(mp4|webm|ogg)$/i) !== null;
   }
 
+  // animate-slide-up em vez de fade-in (Sobe de baixo pra cima elegantemente)
   return (
-    <div ref={containerRef} className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col overflow-y-auto hide-scrollbar animate-slide-in-right">
+    <div ref={containerRef} className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col overflow-y-auto hide-scrollbar animate-slide-up">
       
       {/* HEADER FIXO DO PLAYER */}
       <div className="sticky top-0 z-50 flex items-center justify-between p-4 bg-slate-950 border-b border-slate-800 shadow-md">
-        <button onClick={onClose} className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-white hover:bg-slate-800 transition-colors">
+        <button onClick={handleBack} className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-white hover:bg-slate-800 transition-colors">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1 px-4 text-center overflow-hidden">

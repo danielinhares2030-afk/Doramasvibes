@@ -1,8 +1,9 @@
-import React from 'react';
-import { ArrowLeft, ExternalLink, SkipBack, SkipForward } from 'lucide-react';
+import React, { useRef } from 'react';
+import { ArrowLeft, ExternalLink, SkipBack, SkipForward, Maximize, RotateCw } from 'lucide-react';
 
 export default function PlayerView({ episode, episodios, doramaTitle, setPlayingEpisode, onClose }) {
-  // Encontra o index do episódio atual para saber qual é o Próximo/Anterior
+  const containerRef = useRef(null);
+
   const currentIndex = episodios.findIndex(ep => (ep.videoUrl || ep.link) === (episode.videoUrl || episode.link));
   const hasNext = currentIndex >= 0 && currentIndex < episodios.length - 1;
   const hasPrev = currentIndex > 0;
@@ -10,10 +11,33 @@ export default function PlayerView({ episode, episodios, doramaTitle, setPlaying
   const handleNext = () => { if (hasNext) setPlayingEpisode(episodios[currentIndex + 1]); };
   const handlePrev = () => { if (hasPrev) setPlayingEpisode(episodios[currentIndex - 1]); };
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch(err => console.error(err));
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const toggleOrientation = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current?.requestFullscreen();
+      }
+      const type = window.screen.orientation.type;
+      if (type.includes("portrait")) {
+        await window.screen.orientation.lock("landscape");
+      } else {
+        await window.screen.orientation.lock("portrait");
+      }
+    } catch (error) {
+      alert("A rotação automática requer suporte do navegador ou estar em tela cheia.");
+    }
+  };
+
   let isDirectVideo = false;
   let finalVideoUrl = episode?.videoUrl || episode?.link || '';
 
-  // Lógica inteligente de conversão e proteção (Mantida intacta)
   if (finalVideoUrl) {
     if (finalVideoUrl.includes('<iframe') && finalVideoUrl.includes('src=')) {
       const match = finalVideoUrl.match(/src=["'](.*?)["']/);
@@ -55,7 +79,7 @@ export default function PlayerView({ episode, episodios, doramaTitle, setPlaying
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col overflow-y-auto animate-slide-in-right hide-scrollbar">
+    <div ref={containerRef} className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col overflow-y-auto hide-scrollbar animate-slide-in-right">
       
       {/* HEADER FIXO DO PLAYER */}
       <div className="sticky top-0 z-50 flex items-center justify-between p-4 bg-slate-950 border-b border-slate-800 shadow-md">
@@ -73,7 +97,7 @@ export default function PlayerView({ episode, episodios, doramaTitle, setPlaying
         </a>
       </div>
       
-      {/* ÁREA DE VÍDEO (REMOVIDO AUTOPLAY) */}
+      {/* ÁREA DE VÍDEO (SEM AUTOPLAY) */}
       <div className="w-full aspect-video bg-black relative shrink-0">
         {isDirectVideo ? (
            <video src={finalVideoUrl} controls className="w-full h-full object-contain outline-none"></video>
@@ -82,9 +106,18 @@ export default function PlayerView({ episode, episodios, doramaTitle, setPlaying
         )}
       </div>
 
-      {/* CONTROLES E INFORMAÇÕES ADICIONAIS */}
       <div className="p-5 flex-1 flex flex-col">
         
+        {/* CONTROLES EXTRAS (TELA CHEIA / ROTAÇÃO) */}
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <button onClick={toggleFullscreen} className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs font-bold uppercase tracking-widest text-white hover:bg-slate-800 transition-colors">
+            <Maximize size={16} className="text-pink-500" /> Tela Cheia
+          </button>
+          <button onClick={toggleOrientation} className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs font-bold uppercase tracking-widest text-white hover:bg-slate-800 transition-colors">
+            <RotateCw size={16} className="text-purple-500" /> Girar
+          </button>
+        </div>
+
         {/* BOTÕES DE PULAR */}
         <div className="flex items-center justify-between gap-4 mb-8">
           <button 
@@ -103,10 +136,10 @@ export default function PlayerView({ episode, episodios, doramaTitle, setPlaying
           </button>
         </div>
 
-        {/* LISTA DE EPISÓDIOS DENTRO DO PLAYER */}
+        {/* LISTA DE EPISÓDIOS */}
         <div>
           <h3 className="text-white font-bold mb-4 border-l-4 border-pink-500 pl-3">Todos os Episódios</h3>
-          <div className="space-y-3">
+          <div className="space-y-3 pb-6">
             {episodios.map((ep, idx) => {
               const isPlaying = (ep.videoUrl || ep.link) === (episode.videoUrl || episode.link);
               return (

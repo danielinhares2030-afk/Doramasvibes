@@ -19,22 +19,22 @@ export default function DoramaDetailsView({ dorama, onClose, isSaved, onToggleSa
     }
   };
 
-  if (playingEpisode) {
-    return (
-      <Suspense fallback={<CustomLoader />}>
-        <PlayerView 
-          episode={playingEpisode} 
-          episodios={episodios} 
-          doramaTitle={dorama.title} 
-          setPlayingEpisode={setPlayingEpisode}
-          onClose={() => setPlayingEpisode(null)} 
-        />
-      </Suspense>
-    );
-  }
-
   return (
     <div className="fixed inset-0 z-50 bg-slate-950 overflow-y-auto animate-fade-in-up">
+      
+      {/* O Player renderiza AQUI em cima, isolado, não substitui a tela do Dorama! */}
+      <Suspense fallback={null}>
+        {playingEpisode && (
+          <PlayerView 
+            episode={playingEpisode} 
+            episodios={episodios} 
+            doramaTitle={dorama.title} 
+            setPlayingEpisode={setPlayingEpisode}
+            onClose={() => setPlayingEpisode(null)} 
+          />
+        )}
+      </Suspense>
+
       <div className="fixed top-0 w-full z-40 flex justify-between p-4 bg-gradient-to-b from-slate-950/80 to-transparent">
         <button onClick={onClose} className="w-10 h-10 bg-slate-900/60 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-slate-800"><ArrowLeft size={20} /></button>
         <button className="w-10 h-10 bg-slate-900/60 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-slate-800"><Share2 size={18} /></button>
